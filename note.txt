@@ -1,0 +1,112 @@
+1.created ecommerce-backend folder
+2.npm init -y
+3.npm install --save express lodash mongoose morgan mongodb validator
+4.created an index.js file
+5.create app folder with mvc structure
+ a.cteate models folder
+ b.create middlewares folder
+ 3.create controllers folder
+6.create config folder
+ A.create db.js file
+ B.create router file
+
+
+index.js
+
+const express=require('express');
+const _=require('lodash');
+const morgan=require('morgan');
+const mongoose=require('./config/db');
+const app=express();
+const { router }=require('./config/router');
+
+app.use(morgan('short'));
+app.use(express.json());
+
+app.use('/',router);
+
+app.listen(3000,() =>{
+    console.log('Listening port 3000');
+});
+
+/config/db.js
+
+const mongoose=require('mongoose');
+
+mongoose.Promise=global.Promise;
+
+mongoose.connect('mongodb://localhost:27017/learning-mongodb',{ useNewUrlParser: true,useUnifiedTopology: true });
+
+module.exports=mongoose;
+
+/config/router.js
+
+const express=require('express');
+const router=express.Router();
+const { categoriesController }=require('../app/controllers/categories_controller');
+
+router.use('/categories',categoriesController);
+
+module.exports={
+    router
+}
+
+app/controllers/categories_controller.js
+
+
+const express=require('express');
+const router=express.Router();
+const _=require('lodash');
+
+const { Category }=require('../models/category');
+
+router.get('/',(req,res) =>{
+    Category.find().then((categories) =>{
+        res.send(categories);
+    }).catch((err) =>{
+        res.send(err);
+    })
+});
+
+router.get('/:id',(req,res) =>{
+    let id=req.params.id;
+    Category.findById(id).then((category) =>{
+        res.send(category);
+    }).catch((err) =>{
+        res.send(err);
+    })
+});
+
+router.post('/',(req,res) =>{
+    let body=req.body;
+    let category=new Category(body);
+    category.save().then((category) =>{
+        res.send(category);
+    }).catch((err) =>{
+        res.send(err);
+    })
+})
+
+module.exports={
+    categoriesController:router
+}
+
+
+app/models/category.js
+
+const mongoose=require('mongoose');
+const Schema=mongoose.Schema;
+
+const CategorySchema=new Schema({
+    name:{
+        type:String,
+        require:true,
+        unique:true
+    }
+});
+
+const Category=mongoose.model('Category',CategorySchema);
+
+module.exports={
+    Category
+}
